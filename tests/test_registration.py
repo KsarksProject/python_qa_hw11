@@ -7,7 +7,7 @@ from tests.models.user import User
 @allure.epic('DemoQA Registration')
 @allure.feature('User Registration Form')
 @allure.story('Successful Registration with Valid Data')
-@allure.label("owner", "Aleksandr Bardashevich")
+@allure.label("owner", "Aleksandr Bardashevich")  # Владелец теста
 @allure.tag('positive', 'regression')
 @allure.severity(allure.severity_level.CRITICAL)
 @allure.link('https://demoqa.com/automation-practice-form', name='Registration Form')

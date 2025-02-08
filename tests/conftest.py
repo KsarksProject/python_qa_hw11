@@ -1,61 +1,37 @@
 import pytest
+import os
 from selene import browser
-import allure
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 
 
 @pytest.fixture(scope='function', autouse=True)
 def browser_management():
+    """Фикстура для настройки браузера и управления тестами."""
+    chrome_options = Options()
+
+    # Управление headless-режимом через переменные окружения
+    if os.getenv('HEADLESS', 'false').lower() == 'true':
+        chrome_options.add_argument('--headless')
+
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+
+    # Автоматическая установка ChromeDriver через webdriver-manager
+    browser.config.driver = webdriver.Chrome(
+        service=Service(ChromeDriverManager().install()),
+        options=chrome_options
+    )
+
+    # Основные настройки браузера
     browser.config.base_url = 'https://demoqa.com'
     browser.config.window_width = 1920
     browser.config.window_height = 1080
-    browser.config.timeout = 10
+    browser.config.timeout = 10  # Таймаут ожидания элементов
 
-    with allure.step('Открытие браузера и настройка'):
-        allure.attach(
-            name='Base URL',
-            body=browser.config.base_url,
-            attachment_type=allure.attachment_type.TEXT
-        )
+    yield  # Выполнение теста
 
-    yield
-
-    # Добавление артефактов после выполнения теста
-    attach_allure_artifacts()
-
-    with allure.step('Закрытие браузера'):
-        browser.quit()
-
-
-def attach_allure_artifacts():
-    """Добавление скриншотов, исходного кода страницы и логов консоли в Allure."""
-    if hasattr(browser, 'driver'):
-        try:
-            # Скриншот страницы
-            allure.attach(
-                browser.driver.get_screenshot_as_png(),
-                name='Скриншот страницы',
-                attachment_type=allure.attachment_type.PNG
-            )
-
-            # Исходный код страницы
-            allure.attach(
-                browser.driver.page_source,
-                name='Исходный код страницы',
-                attachment_type=allure.attachment_type.HTML
-            )
-
-            # Логи браузера
-            logs = browser.driver.get_log('browser')
-            logs_text = "\n".join([f"{log['level']}: {log['message']}" for log in logs])
-            allure.attach(
-                logs_text,
-                name='Логи консоли',
-                attachment_type=allure.attachment_type.TEXT
-            )
-
-        except Exception as e:
-            allure.attach(
-                str(e),
-                name='Ошибка при добавлении артефактов',
-                attachment_type=allure.attachment_type.TEXT
-            )
+    # Закрытие браузера после выполнения теста
+    browser.quit()
