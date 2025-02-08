@@ -1,37 +1,34 @@
-import pytest
-import os
-from selene import browser
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+import os
+import pytest
 
 
 @pytest.fixture(scope='function', autouse=True)
 def browser_management():
-    """Фикстура для настройки браузера и управления тестами."""
     chrome_options = Options()
 
-    # Управление headless-режимом через переменные окружения
+    # Управляем режимом headless через переменные окружения
     if os.getenv('HEADLESS', 'false').lower() == 'true':
         chrome_options.add_argument('--headless')
 
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
 
-    # Автоматическая установка ChromeDriver через webdriver-manager
+    # Указываем кастомную папку для кэширования драйвера
+    driver_path = ChromeDriverManager(path="/tmp/wdm").install()
+
     browser.config.driver = webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
+        service=Service(driver_path),
         options=chrome_options
     )
 
-    # Основные настройки браузера
     browser.config.base_url = 'https://demoqa.com'
     browser.config.window_width = 1920
     browser.config.window_height = 1080
-    browser.config.timeout = 10  # Таймаут ожидания элементов
+    browser.config.timeout = 10
 
-    yield  # Выполнение теста
-
-    # Закрытие браузера после выполнения теста
+    yield
     browser.quit()
