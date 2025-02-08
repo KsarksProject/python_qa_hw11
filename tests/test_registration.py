@@ -7,7 +7,7 @@ from tests.models.user import User
 @allure.epic('DemoQA Registration')
 @allure.feature('User Registration Form')
 @allure.story('Successful Registration with Valid Data')
-@allure.label("owner", "Aleksandr Bardashevich")  # Владелец теста
+@allure.label("owner", "Aleksandr Bardashevich")
 @allure.tag('positive', 'regression')
 @allure.severity(allure.severity_level.CRITICAL)
 @allure.link('https://demoqa.com/automation-practice-form', name='Registration Form')
@@ -15,7 +15,7 @@ from tests.models.user import User
 Проверка успешной регистрации пользователя с валидными данными на странице регистрации DemoQA.
 Тест заполняет форму регистрации и проверяет соответствие введённых данных с отображаемыми после отправки формы.
 """)
-def test_registration_form(browser_management):
+def test_registration_form(setup_browser):
     user = User(
         first_name='Linus',
         last_name='Torvalds',
@@ -51,8 +51,8 @@ def test_registration_form(browser_management):
     with allure.step('Открытие страницы регистрации'):
         registration_page.open()
 
-    with allure.step('Заполнение формы регистрации и отправка данных'):
+    with allure.step('Заполнение формы регистрации'):
         registration_page.register(user)
 
-    with allure.step('Проверка успешной регистрации и отображения введённых данных'):
+    with allure.step('Проверка успешной регистрации'):
         registration_page.should_have_registered(expected_results)
