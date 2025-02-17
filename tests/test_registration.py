@@ -1,12 +1,12 @@
-from pages.registration_page import PracticeFormPage
 import allure
+from pages.registration_page import PracticeFormPage
+from data.resources import path  # Импортируем path для корректной загрузки файла
 
 
 @allure.title("Успешное заполнение формы")
-def test_practice_form(browser_set):
-
+def test_practice_form(browser):
     with allure.step("Открытие формы регистрации"):
-        practice_form_page = PracticeFormPage()
+        practice_form_page = PracticeFormPage(browser)
         practice_form_page.open()
 
     with allure.step("Заполнение полного имени"):
@@ -33,7 +33,8 @@ def test_practice_form(browser_set):
         practice_form_page.choose_interest_reading()
 
     with allure.step("Добавление картинки"):
-        practice_form_page.upload_picture("contact.jpg")
+        file_path = path("contact.jpg")  # Получаем полный путь к файлу
+        practice_form_page.upload_picture(file_path)
 
     with allure.step("Заполнение полного адреса"):
         practice_form_page.fill_address("123, Open Source Development Labs")

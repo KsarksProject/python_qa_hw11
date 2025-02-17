@@ -1,33 +1,19 @@
 import pytest
-from selene import browser
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from utils import allure_attach
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
-@pytest.fixture(scope="function")
-def browser_set():
-    options = Options()
-    selenoid_capabilities = {
-        "browserName": "chrome",
-        "browserVersion": "100.0",
-        "selenoid:options": {
-            "enableVNC": True,
-            "enableVideo": True
-        }
-    }
 
-    options.capabilities.update(selenoid_capabilities)
-    driver = webdriver.Remote(
-        command_executor=f"https://user1:1234@selenoid.autotests.cloud/wd/hub",
-        options=options)
+@pytest.fixture(scope="session")
+def browser():
+    """Фикстура для запуска браузера Chrome (один экземпляр на сессию тестов)"""
+    service = Service(ChromeDriverManager().install())
+    options = webdriver.ChromeOptions()
 
-    browser.config.driver = driver
+    options.add_argument("--start-maximized")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-sandbox")
 
-    yield browser
-
-    allure_attach.add_screenshot(browser)
-    allure_attach.add_logs(browser)
-    allure_attach.add_html(browser)
-    allure_attach.add_video(browser)
-
-    browser.quit()
+    driver = webdriver.Chrome(service=service, options=options)
+    yield driver
+    driver.quit()  # Закрытие браузера после завершения тестов
