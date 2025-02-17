@@ -1,19 +1,28 @@
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
+from selene import Browser, Config
 
 
-@pytest.fixture(scope="session")
-def browser():
-    """Фикстура для запуска браузера Chrome (один экземпляр на сессию тестов)"""
-    service = Service(ChromeDriverManager().install())
-    options = webdriver.ChromeOptions()
+@pytest.fixture(scope="function")
+def setup_browser():
+    options = Options()
+    selenoid_capabilities = {
+        "browserName": "chrome",
+        "browserVersion": "100.0",
+        "selenoid:options": {
+            "enableVNC": True,
+            "enableVideo": True
+        }
+    }
+    options.capabilities.update(selenoid_capabilities)
 
-    options.add_argument("--start-maximized")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--no-sandbox")
+    driver = webdriver.Remote(
+        command_executor="https://user1:1234@selenoid.autotests.cloud/wd/hub",
+        options=options
+    )
 
-    driver = webdriver.Chrome(service=service, options=options)
-    yield driver
-    driver.quit()  # Закрытие браузера после завершения тестов
+    browser = Browser(Config(driver=driver))
+    yield browser
+
+    browser.quit()
