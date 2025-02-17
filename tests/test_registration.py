@@ -1,11 +1,12 @@
-import allure
 from pages.registration_page import PracticeFormPage
+import allure
+from selene import browser
+
 
 @allure.title("Успешное заполнение формы")
 def test_practice_form(browser_management):
     practice_form = PracticeFormPage()
 
-    # Открытие и заполнение формы
     with allure.step("Открытие страницы регистрации"):
         practice_form.open()
 
@@ -36,23 +37,27 @@ def test_practice_form(browser_management):
         practice_form.upload_picture("contact.jpg")
 
     with allure.step("Заполнение полного адреса"):
-        (practice_form.fill_address("123, Open Source Development Labs")
-                     .choose_state("NCR")
-                     .choose_city("Delhi"))
+        practice_form.fill_address("123, Open Source Development Labs")
+
+        # Удаляем все iframe перед кликом, чтобы избежать блока рекламы
+        browser.execute_script("document.querySelectorAll('iframe').forEach(iframe => iframe.remove());")
+
+        practice_form.choose_state("NCR")
+        practice_form.choose_city("Delhi")
 
     with allure.step("Отправка формы регистрации"):
         practice_form.submit_button()
 
     with allure.step("Сравнение отправленных и переданных значений"):
         practice_form.should_registered_user_with(
-            full_name="Linus Torvalds",
-            email="torvalds@osdl.org",
-            gender="Male",
-            user_number="9876543210",
-            birthdate="28 December,1969",
-            subjects="Accounting, Maths",
-            hobby="Reading",
-            file="contact.jpg",
-            address="123, Open Source Development Labs",
-            location="NCR Delhi"
+            "Linus Torvalds",
+            "torvalds@osdl.org",
+            "Male",
+            "9876543210",
+            "28 December,1969",
+            "Accounting, Maths",
+            "Reading",
+            "contact.jpg",
+            "123, Open Source Development Labs",
+            "NCR Delhi"
         )
