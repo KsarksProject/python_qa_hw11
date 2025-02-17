@@ -1,54 +1,58 @@
+from pages.registration_page import PracticeFormPage
 import allure
-from allure_commons.types import Severity
-from pages.registration_page import RegistrationPage
-from models.user import User
 
 
-@allure.tag('web')
-@allure.feature("Practice form")
-@allure.story("Проверка регистрации")
-@allure.severity(Severity.NORMAL)
-@allure.label("owner", "Aleksandr Bardashevich")
-@allure.description("Тест проверяет регистрацию")
-@allure.link("https://demoqa.com", name="demoqa.com")
-def test_registration_form(browser_management):
-    user = User(
-        first_name='Linus',
-        last_name='Torvalds',
-        email='torvalds@osdl.org',
-        gender='Male',
-        mobile='9876543210',
-        birth_day='28',
-        birth_month='December',
-        birth_year='1969',
-        subjects=['Accounting', 'Maths'],
-        hobby='Reading',
-        picture='contact.jpg',
-        address='123, Open Source Development Labs',
-        state='NCR',
-        city='Delhi'
-    )
+@allure.title("Успешное заполнение формы")
+def test_practice_form(browser_set):
 
-    expected_results = {
-        'Student Name': f"{user.first_name} {user.last_name}",
-        'Student Email': user.email,
-        'Gender': user.gender,
-        'Mobile': user.mobile,
-        'Date of Birth': f"{user.birth_day} {user.birth_month},{user.birth_year}",
-        'Subjects': ', '.join(user.subjects),
-        'Hobbies': user.hobby,
-        'Picture': user.picture,
-        'Address': user.address,
-        'State and City': f"{user.state} {user.city}"
-    }
+    with allure.step("Открытие формы регистрации"):
+        practice_form_page = PracticeFormPage()
+        practice_form_page.open()
 
-    registration_page = RegistrationPage()
+    with allure.step("Заполнение полного имени"):
+        practice_form_page.fill_first_name("Linus")
+        practice_form_page.fill_last_name("Torvalds")
 
-    with allure.step("Открываем страницу регистрации"):
-        registration_page.open()
+    with allure.step("Заполнение email"):
+        practice_form_page.fill_email("torvalds@osdl.org")
 
-    with allure.step("Заполняем форму регистрации и отправляем данные"):
-        registration_page.register(user)
+    with allure.step("Выбор пола"):
+        practice_form_page.select_gender("Male")
 
-    with allure.step("Проверяем, что данные регистрации отображаются корректно"):
-        registration_page.should_have_registered(expected_results)
+    with allure.step("Заполнение номера телефона"):
+        practice_form_page.fill_user_number("9876543210")
+
+    with allure.step("Выбор даты рождения"):
+        practice_form_page.pick_date_of_birth("1969", "December", "28")
+
+    with allure.step("Выбор интересующих предметов"):
+        practice_form_page.fill_subject("Accounting")
+        practice_form_page.fill_subject("Maths")
+
+    with allure.step("Выбор хобби"):
+        practice_form_page.choose_interest_reading()
+
+    with allure.step("Добавление картинки"):
+        practice_form_page.upload_picture("contact.jpg")
+
+    with allure.step("Заполнение полного адреса"):
+        practice_form_page.fill_address("123, Open Source Development Labs")
+        practice_form_page.choose_state("NCR")
+        practice_form_page.choose_city("Delhi")
+
+    with allure.step("Отправка формы регистрации"):
+        practice_form_page.submit_button()
+
+    with allure.step("Сравнение отправленных и переданных значений"):
+        practice_form_page.should_registered_user_with(
+            "Linus Torvalds",
+            "torvalds@osdl.org",
+            "Male",
+            "9876543210",
+            "28 December,1969",
+            "Accounting, Maths",
+            "Reading",
+            "contact.jpg",
+            "123, Open Source Development Labs",
+            "NCR Delhi"
+        )

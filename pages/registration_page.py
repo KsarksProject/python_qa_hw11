@@ -1,102 +1,84 @@
-import os
-from selene import browser, have, command
-from models.user import User
+from selene import browser, by, have
+from data import resources
 
 
-class RegistrationPage:
+class PracticeFormPage:
+    def __init__(self):
+        self.first_name = browser.element('[id="firstName"]')
+        self.last_name = browser.element('[id="lastName"]')
+        self.email = browser.element('[id="userEmail"]')
+        self.user_number = browser.element('[id="userNumber"]')
+        self.address = browser.element('[id="currentAddress"]')
+        self.subject = browser.element("#subjectsInput")
+
     def open(self):
-        browser.open('/automation-practice-form')
-        return self
+        browser.open('https://demoqa.com/automation-practice-form')
+        browser.driver.execute_script("$('#fixedban').remove()")
+        browser.driver.execute_script("$('footer').remove()")
 
-    def fill_first_name(self, first_name: str):
-        browser.element('#firstName').type(first_name)
-        return self
+    def fill_first_name(self, value):
+        self.first_name.type(value)
 
-    def fill_last_name(self, last_name: str):
-        browser.element('#lastName').type(last_name)
-        return self
+    def fill_last_name(self, value):
+        self.last_name.type(value)
 
-    def fill_email(self, email: str):
-        browser.element('#userEmail').type(email)
-        return self
+    def fill_email(self, value):
+        self.email.type(value)
 
-    def select_gender(self, gender: str):
-        browser.element(f'input[value="{gender}"]').perform(command.js.click)
-        return self
+    def select_gender(self, value):
+        browser.element(by.text(value)).click()
 
-    def fill_mobile(self, mobile: str):
-        browser.element('#userNumber').type(mobile)
-        return self
+    def fill_user_number(self, value):
+        self.user_number.type(value)
 
-    def set_date_of_birth(self, day: str, month: str, year: str):
-        browser.driver.execute_script("""
-                const iframe = document.querySelector('iframe[id^="google_ads_iframe"]');
-                if (iframe) {
-                    iframe.remove();
-                }
-            """)
+    def pick_date_of_birth(self, year, month, day):
+        browser.element("#dateOfBirthInput").click()
+        browser.element("[class='react-datepicker__year-select']").click().element(by.text(f"{year}")).click()
+        browser.element("[class='react-datepicker__month-select']").click().element(by.text(f"{month}")).click()
+        browser.element(by.text(f"{day}")).click()
 
-        browser.element('#dateOfBirthInput').click()
-        browser.element('.react-datepicker__year-select').click()
-        browser.all('.react-datepicker__year-select option').element_by(have.text(year)).click()
-        browser.element('.react-datepicker__month-select').click()
-        browser.all('.react-datepicker__month-select option').element_by(have.text(month)).click()
-        browser.element(f'.react-datepicker__day--0{day}').click()
-        return self
+    def fill_subject(self, value):
+        self.subject.type(value).press_enter()
 
-    def fill_subjects(self, subjects: list[str]):
-        for subject in subjects:
-            browser.element('#subjectsInput').type(subject).press_enter()
-        return self
+    def choose_interest_sport(self):
+        browser.element(by.text("Sports")).click()
 
-    def select_hobby(self, hobby: str):
-        browser.all('.custom-checkbox label') \
-            .element_by(have.text(hobby)) \
-            .perform(command.js.scroll_into_view) \
-            .click()
-        return self
+    def choose_interest_music(self):
+        browser.element(by.text("Music")).click()
 
-    def upload_picture(self, picture_path: str):
-        assert os.path.exists(picture_path), f"Файл {picture_path} не найден!"
-        browser.element('#uploadPicture').send_keys(picture_path)
-        return self
+    def choose_interest_reading(self):
+        browser.element(by.text("Reading")).click()
 
-    def fill_address(self, address: str):
-        browser.element('#currentAddress').type(address)
-        return self
+    def upload_picture(self, value):
+        browser.element('#uploadPicture').set_value(resources.path(value))
 
-    def select_state_and_city(self, state: str, city: str):
-        browser.element('#state').click()
-        browser.all('[id^="react-select-3-option"]').element_by(have.text(state)).click()
-        browser.element('#city').click()
-        browser.all('[id^="react-select-4-option"]').element_by(have.text(city)).click()
-        return self
+    def choose_state(self, value):
+        browser.element('[id="state"]').click()
+        browser.element(by.text(value)).click()
 
-    def submit(self):
-        browser.element('#submit').click()
-        return self
+    def choose_city(self, value):
+        browser.element('[id="city"]').click()
+        browser.element(by.text(value)).click()
 
-    def register(self, user: User):
-        picture_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), '..', 'data', user.picture)
+    def fill_address(self, value):
+        self.address.type(value)
+
+    def submit_button(self):
+        browser.element('[id="submit"]').click()
+
+    def should_registered_user_with(self, full_name, email, gender, user_number, birthdate, subjects, hobby, file, address, location):
+
+        browser.element('.table').all('td').even.should(
+            have.exact_texts(
+                full_name,
+                email,
+                gender,
+                user_number,
+                birthdate,
+                subjects,
+                hobby,
+                file,
+                address,
+                location,
+            )
         )
-        assert os.path.exists(picture_path), f"Файл {picture_path} не найден!"
-
-        self.fill_first_name(user.first_name) \
-            .fill_last_name(user.last_name) \
-            .fill_email(user.email) \
-            .select_gender(user.gender) \
-            .fill_mobile(user.mobile) \
-            .set_date_of_birth(user.birth_day, user.birth_month, user.birth_year) \
-            .fill_subjects(user.subjects) \
-            .select_hobby(user.hobby) \
-            .upload_picture(picture_path) \
-            .fill_address(user.address) \
-            .select_state_and_city(user.state, user.city) \
-            .submit()
-        return self
-
-    def should_have_registered(self, expected_results: dict):
-        for field, value in expected_results.items():
-            browser.all('tr').element_by(have.text(field)).should(have.text(value))
-        return self
